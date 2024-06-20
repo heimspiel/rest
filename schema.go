@@ -279,6 +279,21 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 		return name, &knownSchema, nil
 	}
 
+	// We already saw this model but did not add a schema yet: recursion detected
+	// At this moment there is no schema definition yet, but we can leave the handling to getSchemaReferenceOrValue on top level
+	if slices.Contains([]reflect.Kind{
+		reflect.Struct,
+	}, t.Kind()) {
+		if ok := api.visitedModels[t.String()]; ok {
+			scm := openapi3.Schema{
+				Type: &openapi3.Types{openapi3.TypeObject},
+			}
+			return name, &scm, nil
+		} else {
+			api.visitedModels[t.String()] = true
+		}
+	}
+
 	var elementName string
 	var elementSchema *openapi3.Schema
 	switch t.Kind() {

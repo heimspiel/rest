@@ -26,8 +26,9 @@ func NewAPI(name string, opts ...APIOpts) *API {
 		KnownTypes: defaultKnownTypes,
 		Routes:     make(map[Pattern]MethodToRoute),
 		// map of model name to schema.
-		models:   make(map[string]*openapi3.Schema),
-		comments: make(map[string]map[string]string),
+		models:        make(map[string]*openapi3.Schema),
+		comments:      make(map[string]map[string]string),
+		visitedModels: make(map[string]bool),
 	}
 	for _, o := range opts {
 		o(api)
@@ -151,6 +152,9 @@ type API struct {
 	// Apply customisation to a specific type by checking the t parameter.
 	// Apply customisations to all types by ignoring the t parameter.
 	ApplyCustomSchemaToType func(t reflect.Type, s *openapi3.Schema)
+
+	// Map of types were processed in model registration
+	visitedModels map[string]bool
 }
 
 // Merge route data into the existing configuration.

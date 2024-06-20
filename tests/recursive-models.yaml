@@ -1,0 +1,33 @@
+components:
+  schemas:
+    RecursiveModelModel:
+      type: object
+      nullable: true
+      properties:
+        model:
+          $ref: "#/components/schemas/RecursiveModel"
+        bar:
+          type: string
+    RecursiveModel:
+      type: object
+      properties:
+        recursive:
+          $ref: "#/components/schemas/RecursiveModelModel"
+        foo:
+          type: string
+paths:
+  /recursive-models:
+    get:
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecursiveModel'
+        default:
+          description: ""
+openapi: 3.0.0
+info:
+    title: recursive-models.yaml
+    version: 0.0.0

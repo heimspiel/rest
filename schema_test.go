@@ -179,6 +179,16 @@ type StructWithTags struct {
 	A string `json:"a" rest:"A is a string."`
 }
 
+type RecursiveModelModel struct {
+	Model  *RecursiveModel   `json:"model,omitempty"`
+	Bar    string            `json:"bar,omitempty"`
+}
+
+type RecursiveModel struct {
+	Recursive *RecursiveModelModel     `json:"recursive,omitempty"`
+	Foo       string                   `json:"foo,omitempty"`
+}
+
 func TestSchema(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -264,6 +274,14 @@ func TestSchema(t *testing.T) {
 			setup: func(api *API) error {
 				api.Route(http.MethodGet, "/test").
 					HasResponseModel(http.StatusOK, ModelOf[KnownTypes]())
+				return nil
+			},
+		},
+		{
+			name: "recursive-models.yaml",
+			setup: func(api *API) error {
+				api.Get("/recursive-models").
+					HasResponseModel(http.StatusOK, ModelOf[RecursiveModel]())
 				return nil
 			},
 		},
