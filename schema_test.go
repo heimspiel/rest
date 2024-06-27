@@ -180,13 +180,13 @@ type StructWithTags struct {
 }
 
 type RecursiveModelModel struct {
-	Model  *RecursiveModel   `json:"model,omitempty"`
-	Bar    string            `json:"bar,omitempty"`
+	Model *RecursiveModel `json:"model,omitempty"`
+	Bar   string          `json:"bar,omitempty"`
 }
 
 type RecursiveModel struct {
-	Recursive *RecursiveModelModel     `json:"recursive,omitempty"`
-	Foo       string                   `json:"foo,omitempty"`
+	Recursive *RecursiveModelModel `json:"recursive,omitempty"`
+	Foo       string               `json:"foo,omitempty"`
 }
 
 func TestSchema(t *testing.T) {
@@ -490,7 +490,7 @@ func TestSchema(t *testing.T) {
 				defer wg.Done()
 				// Create the API.
 				api := NewAPI(test.name, test.opts...)
-				api.StripPkgPaths = []string{"github.com/a-h/rest"}
+				api.StripPkgPaths = []string{"github.com/heimspiel/rest"}
 				// Configure it.
 				test.setup(api)
 				// Create the actual spec.

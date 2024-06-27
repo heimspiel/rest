@@ -3,7 +3,7 @@ package get
 import (
 	"net/http"
 
-	"github.com/a-h/rest/examples/stdlib/models"
+	"github.com/heimspiel/rest/examples/stdlib/models"
 )
 
 type TopicsGetResponse struct {
