@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.22.1
 
 require (
-	github.com/getkin/kin-openapi v0.124.0
+	github.com/getkin/kin-openapi v0.126.0
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/google/go-cmp v0.5.9
 	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
