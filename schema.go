@@ -338,17 +338,28 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 			if !f.IsExported() {
 				continue
 			}
+			fieldType := f.Type
 			// Get JSON fieldName.
 			jsonTags := strings.Split(f.Tag.Get("json"), ",")
+			fieldTypeOverride := f.Tag.Get("swaggertype")
+
+			if fieldTypeOverride != "" {
+				switch fieldTypeOverride {
+				case "string":
+					fieldType = reflect.TypeOf("")
+				}
+			}
+
 			fieldName := jsonTags[0]
 			if fieldName == "" {
 				fieldName = f.Name
 			}
+
 			// If the model doesn't exist.
-			_, alreadyExists := api.models[api.getModelName(f.Type)]
-			fieldSchemaName, fieldSchema, err := api.RegisterModel(modelFromType(f.Type))
+			_, alreadyExists := api.models[api.getModelName(fieldType)]
+			fieldSchemaName, fieldSchema, err := api.RegisterModel(modelFromType(fieldType))
 			if err != nil {
-				return name, schema, fmt.Errorf("error getting schema for type %q, field %q, failed to get schema for embedded type %q: %w", t, fieldName, f.Type, err)
+				return name, schema, fmt.Errorf("error getting schema for type %q, field %q, failed to get schema for embedded type %q: %w", t, fieldName, fieldType, err)
 			}
 			if f.Anonymous {
 				// It's an anonymous type, no need for a reference to it,
@@ -370,7 +381,7 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 				}
 			}
 			schema.Properties[fieldName] = ref
-			isPtr := f.Type.Kind() == reflect.Pointer
+			isPtr := fieldType.Kind() == reflect.Pointer
 			hasOmitEmptySet := slices.Contains(jsonTags, "omitempty")
 			if isFieldRequired(isPtr, hasOmitEmptySet) {
 				schema.Required = append(schema.Required, fieldName)

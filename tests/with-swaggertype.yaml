@@ -1,0 +1,23 @@
+components:
+  schemas:
+    WithSwaggerType:
+      properties:
+        foo:
+          type: string
+      type: object
+info:
+  title: with-swaggertype.yaml
+  version: 0.0.0
+openapi: 3.0.0
+paths:
+  /with-swaggertype:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WithSwaggerType'
+          description: ""
+        default:
+          description: ""

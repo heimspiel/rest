@@ -189,6 +189,16 @@ type RecursiveModel struct {
 	Foo       string               `json:"foo,omitempty"`
 }
 
+
+type WithSwaggerType struct {
+	Foo []uint8 `json:"foo,omitempty" swaggertype:"string"`
+}
+
+type WithWithSwaggerType struct {
+	*WithSwaggerType
+	Bar string `json:"bar,omitempty"`
+}
+
 func TestSchema(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -418,6 +428,14 @@ func TestSchema(t *testing.T) {
 					HasResponseModel(http.StatusOK, ModelOf[StructWithCustomisation]())
 				api.Get("/struct-ptr-with-customisation").
 					HasResponseModel(http.StatusOK, ModelOf[*StructWithCustomisation]())
+				return
+			},
+		},
+		{
+			name: "with-swaggertype.yaml",
+			setup: func(api *API) (err error) {
+				api.Get("/with-swaggertype").
+					HasResponseModel(http.StatusOK, ModelOf[WithWithSwaggerType]())
 				return
 			},
 		},
