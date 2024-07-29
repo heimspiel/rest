@@ -1,8 +1,10 @@
 components:
   schemas:
-    WithSwaggerType:
+    WithWithSwaggerType:
       properties:
         foo:
+          type: string
+        bar:
           type: string
       type: object
 info:
@@ -17,7 +19,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WithSwaggerType'
+                $ref: '#/components/schemas/WithWithSwaggerType'
           description: ""
         default:
           description: ""
