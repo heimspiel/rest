@@ -344,8 +344,9 @@ var _ CustomSchemaApplier = Model{}
 
 // Model is a model used in one or more routes.
 type Model struct {
-	Type reflect.Type
-	s    func(s *openapi3.Schema)
+	Type    reflect.Type
+	Example any
+	s       func(s *openapi3.Schema)
 }
 
 func (m Model) ApplyCustomSchema(s *openapi3.Schema) {

@@ -1,0 +1,27 @@
+openapi: 3.0.0
+components:
+  schemas:
+    StructWithTags:
+      example:
+        a: foo
+      type: object
+      properties:
+        a:
+          type: string
+      required:
+      - a
+info:
+  title: with-model-examples.yaml
+  version: 0.0.0
+paths:
+  /with-model-examples:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructWithTags'
+          description: ""
+        default:
+          description: ""

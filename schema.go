@@ -266,6 +266,10 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 	// If we've already got the schema, return it.
 	var ok bool
 	if schema, ok = api.models[name]; ok {
+		// for _, opt := range opts {
+		// 	opt(schema)
+		// }
+
 		return name, schema, nil
 	}
 
