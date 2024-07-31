@@ -224,6 +224,12 @@ func WithEnumValues[T ~string | constraints.Integer](values ...T) ModelOpts {
 	}
 }
 
+func WithExample(example any) ModelOpts {
+	return func(s *openapi3.Schema) {
+		s.Example = example
+	}
+}
+
 // WithEnumConstants sets the property to be an enum containing the values of the type found in the package.
 func WithEnumConstants[T ~string | constraints.Integer]() ModelOpts {
 	return func(s *openapi3.Schema) {
@@ -266,6 +272,14 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 	// If we've already got the schema, return it.
 	var ok bool
 	if schema, ok = api.models[name]; ok {
+		// We still want to apply the opts, when we know the schema
+		// The downside here is that if a struct has been referenced as a Value _and_ as a Pointer , there weill only
+		// exist one schema definition with object being nullable due to the Pointer variant. This is not really correct behaviour.
+		// A solution here might be to defined two variations of a single schema/struct, once as a nullable object and once as non nullable.
+		for _, opt := range opts {
+			opt(schema)
+		}
+
 		return name, schema, nil
 	}
 
