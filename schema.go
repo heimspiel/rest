@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -287,6 +288,9 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 	if knownSchema, ok := api.KnownTypes[t]; ok {
 		// Objects, enums, need to be references, so add it into the
 		// list.
+		// TODO: this might be the correct approach when the enum is defined in properly in go. If the model itself
+		// only states that a field is of type string and contains an enum struct, we need to handle this a bit differently
+		// since multiple fields of type sstring can have different enums or min/max values respectively
 		if shouldBeReferenced(&knownSchema) {
 			api.models[name] = &knownSchema
 		}
@@ -372,6 +376,42 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 			// If the model doesn't exist.
 			_, alreadyExists := api.models[api.getModelName(fieldType)]
 			fieldSchemaName, fieldSchema, err := api.RegisterModel(modelFromType(fieldType))
+
+			minimum := f.Tag.Get("minimum")
+			maximum := f.Tag.Get("maximum")
+			minLength := f.Tag.Get("minLength")
+			maxLength := f.Tag.Get("maxLength")
+			enum := f.Tag.Get("enums")
+
+			if minimum != "" {
+				min, _ := strconv.Atoi(minimum)
+				fieldSchema.WithMin(float64(min))
+			}
+			if maximum != "" {
+				max, _ := strconv.Atoi(maximum)
+				fieldSchema.WithMax(float64(max))
+			}
+
+			if minLength != "" {
+				minL, _ := strconv.Atoi(minLength)
+				fieldSchema.WithMinLength(int64(minL))
+			}
+
+			if maxLength != "" {
+				maxL, _ := strconv.Atoi(maxLength)
+				fieldSchema.WithMaxLength(int64(maxL))
+			}
+
+			if enum != "" {
+				enums := strings.Split(enum, ",")
+				// []string is not usable as []any, we need to convert to an array of interfaces first
+				s := make([]interface{}, len(enums))
+				for i, v := range enums {
+					s[i] = v
+				}
+				fieldSchema.WithEnum(s...)
+			}
+
 			if err != nil {
 				return name, schema, fmt.Errorf("error getting schema for type %q, field %q, failed to get schema for embedded type %q: %w", t, fieldName, fieldType, err)
 			}

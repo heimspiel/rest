@@ -1,0 +1,36 @@
+openapi: 3.0.0
+components:
+  schemas:
+    WithExamplesMinMaxEnum:
+      type: object
+      properties:
+        foo:
+          type: string
+          minLength: 2
+          maxLength: 5
+        bar:
+          type: integer
+          minimum: 0
+          maximum: 255
+        baz:
+          type: string
+          enum: [foo, bar, baz]
+      required:
+      - foo
+      - bar
+      - baz
+info:
+  title: with-field-examples-min-max.yaml
+  version: 0.0.0
+paths:
+  /with-field-examples-min-max:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WithExamplesMinMaxEnum'
+          description: ""
+        default:
+          description: ""
