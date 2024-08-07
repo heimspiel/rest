@@ -280,30 +280,52 @@ var reflectPrimitives = []string{
 	reflect.String.String(),
 }
 
-func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, schema *openapi3.Schema) {
-	minimum := tags.Get("minimum")
-	maximum := tags.Get("maximum")
-	minLength := tags.Get("minLength")
-	maxLength := tags.Get("maxLength")
-	enum := tags.Get("enums")
+func IntOrFloatToFloat(val string, bitlength int) (float64, error) {
+	if bitlength > 0 {
+		return strconv.ParseFloat(val, bitlength)
+	} else {
+		v, err := strconv.ParseInt(val, 0, 64)
+		return float64(v), err
+	}
+}
 
+// WithMinMaxEnum attaches minimum, maximum and enum values to the given schema. If bitlength is 0 we
+// treat the value as an string-integer, if it is above, the value will be treated as a float of given bitlength
+func WithMinMaxEnum(bitlength int, minimum, maximum, enum string, schema *openapi3.Schema) {
 	if minimum != "" {
-		min, err := strconv.Atoi(minimum)
+		min, err := IntOrFloatToFloat(minimum, bitlength)
 		if err != nil {
 			fmt.Println("Could not convert minimum value to desired type", err)
 		} else {
-			schema.WithMin(float64(min))
+			schema.WithMin(min)
 		}
 	}
 	if maximum != "" {
-		max, err := strconv.Atoi(maximum)
+		max, err := IntOrFloatToFloat(maximum, bitlength)
 		if err != nil {
 			fmt.Println("Could not convert maximum value to desired type", err)
 		} else {
-			schema.WithMax(float64(max))
+			schema.WithMax(max)
 		}
 	}
+	if enum != "" {
+		enums := strings.Split(enum, ",")
+		s := make([]interface{}, len(enums))
+		for i, v := range enums {
+			iV, err := IntOrFloatToFloat(v, bitlength)
+			if err != nil {
+				fmt.Println("Could not convert enum value to desired type", err)
+			} else {
+				s[i] = iV
+			}
+		}
+		schema.WithEnum(s...)
+	}
+}
 
+// WithMinLMaxLEnum attaches minLength, maxLength and enum values to the given schema expecting that
+// the schema type is `string`
+func WithMinLMaxLEnum(minLength, maxLength, enum string, schema *openapi3.Schema) {
 	if minLength != "" {
 		minL, err := strconv.Atoi(minLength)
 		if err != nil {
@@ -326,18 +348,31 @@ func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, sch
 		enums := strings.Split(enum, ",")
 		s := make([]interface{}, len(enums))
 		for i, v := range enums {
-			if fieldType.Kind() == reflect.String || fieldType.Kind() == reflect.Ptr {
-				s[i] = v
-			} else {
-				iV, err := strconv.Atoi(v)
-				if err != nil {
-					fmt.Println("Could not convert enum value to desired type", err)
-				} else {
-					s[i] = iV
-				}
-			}
+			s[i] = v
 		}
 		schema.WithEnum(s...)
+	}
+}
+
+func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, schema *openapi3.Schema) {
+	minimum := tags.Get("minimum")
+	maximum := tags.Get("maximum")
+	minLength := tags.Get("minLength")
+	maxLength := tags.Get("maxLength")
+	enum := tags.Get("enums")
+
+	switch fieldType.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint,
+		reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		WithMinMaxEnum(0, minimum, maximum, enum, schema)
+	case reflect.Float32:
+		WithMinMaxEnum(32, minimum, maximum, enum, schema)
+	case reflect.Float64:
+		WithMinMaxEnum(64, minimum, maximum, enum, schema)
+	case reflect.String:
+		WithMinLMaxLEnum(minLength, maxLength, enum, schema)
+	case reflect.Ptr:
+		WithPropsFromStructTags(tags, fieldType.Elem(), schema)
 	}
 }
 

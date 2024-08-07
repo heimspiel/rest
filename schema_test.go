@@ -199,11 +199,13 @@ type WithWithSwaggerType struct {
 }
 
 type WithExamplesMinMaxEnum struct {
-	Foo  string  `json:"foo" minLength:"2" maxLength:"5"`
-	Bar  int     `json:"bar" minimum:"0" maximum:"255"`
-	Baz  string  `json:"baz" enums:"foo,bar,baz"`
-	Qux  int     `json:"qux" enums:"1,2,3"`
-	Fred *string `json:"fred" enums:"foo,bar,baz"`
+	Foo   string  `json:"foo" minLength:"2" maxLength:"5"`
+	Bar   int     `json:"bar" minimum:"0" maximum:"255"`
+	Baz   string  `json:"baz" enums:"foo,bar,baz"`
+	Qux   int     `json:"qux" enums:"1,2,3"`
+	Fred  *string `json:"fred" enums:"foo,bar,baz"`
+	Thud  float64 `json:"thud" minimum:"0" maximum:"9.9999"`
+	Waldo float64 `json:"waldo" minimum:"0" maximum:"99999.9999999"`
 }
 
 func TestSchema(t *testing.T) {

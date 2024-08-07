@@ -22,11 +22,21 @@ components:
           nullable: true
           type: string
           enum: [foo, bar, baz]
+        thud:
+          type: number
+          minimum: 0
+          maximum: 9.9999
+        waldo:
+          type: number
+          minimum: 0
+          maximum: 99999.9999999
       required:
       - foo
       - bar
       - baz
       - qux
+      - thud
+      - waldo
 info:
   title: with-field-examples-min-max.yaml
   version: 0.0.0
