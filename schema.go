@@ -288,22 +288,38 @@ func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, sch
 	enum := tags.Get("enums")
 
 	if minimum != "" {
-		min, _ := strconv.Atoi(minimum)
-		schema.WithMin(float64(min))
+		min, err := strconv.Atoi(minimum)
+		if err != nil {
+			fmt.Println("Could not convert minimum value to desired type", err)
+		} else {
+			schema.WithMin(float64(min))
+		}
 	}
 	if maximum != "" {
-		max, _ := strconv.Atoi(maximum)
-		schema.WithMax(float64(max))
+		max, err := strconv.Atoi(maximum)
+		if err != nil {
+			fmt.Println("Could not convert maximum value to desired type", err)
+		} else {
+			schema.WithMax(float64(max))
+		}
 	}
 
 	if minLength != "" {
-		minL, _ := strconv.Atoi(minLength)
-		schema.WithMinLength(int64(minL))
+		minL, err := strconv.Atoi(minLength)
+		if err != nil {
+			fmt.Println("Could not convert minLength value to desired type", err)
+		} else {
+			schema.WithMinLength(int64(minL))
+		}
 	}
 
 	if maxLength != "" {
-		maxL, _ := strconv.Atoi(maxLength)
-		schema.WithMaxLength(int64(maxL))
+		maxL, err := strconv.Atoi(maxLength)
+		if err != nil {
+			fmt.Println("Could not convert maxLength value to desired type", err)
+		} else {
+			schema.WithMaxLength(int64(maxL))
+		}
 	}
 
 	if enum != "" {
@@ -313,8 +329,12 @@ func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, sch
 			if fieldType.Kind() == reflect.String || fieldType.Kind() == reflect.Ptr {
 				s[i] = v
 			} else {
-				iV, _ := strconv.Atoi(v)
-				s[i] = iV
+				iV, err := strconv.Atoi(v)
+				if err != nil {
+					fmt.Println("Could not convert enum value to desired type", err)
+				} else {
+					s[i] = iV
+				}
 			}
 		}
 		schema.WithEnum(s...)
