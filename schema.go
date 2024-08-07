@@ -349,8 +349,7 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 	name = api.getModelName(t)
 
 	if !slices.Contains(reflectPrimitives, name) {
-		var ok bool
-		if schema, ok = api.models[name]; ok {
+		if schema, ok := api.models[name]; ok {
 			return name, schema, nil
 		}
 	}
