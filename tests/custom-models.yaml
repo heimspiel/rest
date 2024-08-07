@@ -1,7 +1,6 @@
 components:
   schemas:
     StructWithCustomisation:
-      nullable: true
       properties:
         a:
           description: A string

@@ -15,10 +15,14 @@ components:
         baz:
           type: string
           enum: [foo, bar, baz]
+        qux:
+          type: integer
+          enum: [1, 2, 3]
       required:
       - foo
       - bar
       - baz
+      - qux
 info:
   title: with-field-examples-min-max.yaml
   version: 0.0.0
