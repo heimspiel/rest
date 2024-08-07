@@ -308,7 +308,6 @@ func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, sch
 
 	if enum != "" {
 		enums := strings.Split(enum, ",")
-		// []string is not usable as []any, we need to convert to an array of interfaces first
 		s := make([]interface{}, len(enums))
 		for i, v := range enums {
 			if fieldType.Kind() == reflect.String {
@@ -339,7 +338,9 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 	// It's known, but not in the schemaset yet.
 	if knownSchema, ok := api.KnownTypes[t]; ok {
 		// Objects, enums, need to be references, so add it into the
-		// list.
+		// list. This does only apply if the enum is defined in go code.
+		// If in go context the field is a primitive type and we only know enums from struct tags
+		// we handle this case differently (at least for now)
 		if !slices.Contains(reflectPrimitives, name) && shouldBeReferenced(&knownSchema) {
 			api.models[name] = &knownSchema
 		}
