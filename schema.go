@@ -310,7 +310,7 @@ func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, sch
 		enums := strings.Split(enum, ",")
 		s := make([]interface{}, len(enums))
 		for i, v := range enums {
-			if fieldType.Kind() == reflect.String {
+			if fieldType.Kind() == reflect.String || fieldType.Kind() == reflect.Ptr {
 				s[i] = v
 			} else {
 				iV, _ := strconv.Atoi(v)

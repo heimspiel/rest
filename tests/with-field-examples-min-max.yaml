@@ -18,6 +18,10 @@ components:
         qux:
           type: integer
           enum: [1, 2, 3]
+        fred:
+          nullable: true
+          type: string
+          enum: [foo, bar, baz]
       required:
       - foo
       - bar
