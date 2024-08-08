@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -185,7 +186,7 @@ func (api *API) getModelName(t reflect.Type) string {
 }
 
 func getSchemaReferenceOrValue(name string, schema *openapi3.Schema) *openapi3.SchemaRef {
-	if shouldBeReferenced(schema) {
+	if !slices.Contains(reflectPrimitives, name) && shouldBeReferenced(schema) {
 		return openapi3.NewSchemaRef(fmt.Sprintf("#/components/schemas/%s", name), nil)
 	}
 	return openapi3.NewSchemaRef("", schema)
@@ -262,6 +263,119 @@ func isMarkedAsDeprecated(comment string) bool {
 	return false
 }
 
+var reflectPrimitives = []string{
+	reflect.Int.String(),
+	reflect.Int8.String(),
+	reflect.Int16.String(),
+	reflect.Int32.String(),
+	reflect.Int64.String(),
+	reflect.Uint.String(),
+	reflect.Uint8.String(),
+	reflect.Uint16.String(),
+	reflect.Uint32.String(),
+	reflect.Uint64.String(),
+	reflect.Float64.String(),
+	reflect.Float32.String(),
+	reflect.Bool.String(),
+	reflect.String.String(),
+}
+
+func IntOrFloatToFloat(val string, bitlength int) (float64, error) {
+	if bitlength > 0 {
+		return strconv.ParseFloat(val, bitlength)
+	} else {
+		v, err := strconv.ParseInt(val, 0, 64)
+		return float64(v), err
+	}
+}
+
+// WithMinMaxEnum attaches minimum, maximum and enum values to the given schema. If bitlength is 0 we
+// treat the value as an string-integer, if it is above, the value will be treated as a float of given bitlength
+func WithMinMaxEnum(bitlength int, minimum, maximum, enum string, schema *openapi3.Schema) {
+	if minimum != "" {
+		min, err := IntOrFloatToFloat(minimum, bitlength)
+		if err != nil {
+			fmt.Println("Could not convert minimum value to desired type", err)
+		} else {
+			schema.WithMin(min)
+		}
+	}
+	if maximum != "" {
+		max, err := IntOrFloatToFloat(maximum, bitlength)
+		if err != nil {
+			fmt.Println("Could not convert maximum value to desired type", err)
+		} else {
+			schema.WithMax(max)
+		}
+	}
+	if enum != "" {
+		enums := strings.Split(enum, ",")
+		s := make([]interface{}, len(enums))
+		for i, v := range enums {
+			iV, err := IntOrFloatToFloat(v, bitlength)
+			if err != nil {
+				fmt.Println("Could not convert enum value to desired type", err)
+			} else {
+				s[i] = iV
+			}
+		}
+		schema.WithEnum(s...)
+	}
+}
+
+// WithMinLMaxLEnum attaches minLength, maxLength and enum values to the given schema expecting that
+// the schema type is `string`
+func WithMinLMaxLEnum(minLength, maxLength, enum string, schema *openapi3.Schema) {
+	if minLength != "" {
+		minL, err := strconv.Atoi(minLength)
+		if err != nil {
+			fmt.Println("Could not convert minLength value to desired type", err)
+		} else {
+			schema.WithMinLength(int64(minL))
+		}
+	}
+
+	if maxLength != "" {
+		maxL, err := strconv.Atoi(maxLength)
+		if err != nil {
+			fmt.Println("Could not convert maxLength value to desired type", err)
+		} else {
+			schema.WithMaxLength(int64(maxL))
+		}
+	}
+
+	if enum != "" {
+		enums := strings.Split(enum, ",")
+		s := make([]interface{}, len(enums))
+		for i, v := range enums {
+			s[i] = v
+		}
+		schema.WithEnum(s...)
+	}
+}
+
+func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, schema *openapi3.Schema) {
+	minimum := tags.Get("minimum")
+	maximum := tags.Get("maximum")
+	minLength := tags.Get("minLength")
+	maxLength := tags.Get("maxLength")
+	enum := tags.Get("enums")
+
+	switch fieldType.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint,
+		reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		WithMinMaxEnum(0, minimum, maximum, enum, schema)
+	case reflect.Float32:
+		WithMinMaxEnum(32, minimum, maximum, enum, schema)
+	case reflect.Float64:
+		WithMinMaxEnum(64, minimum, maximum, enum, schema)
+	case reflect.String:
+		WithMinLMaxLEnum(minLength, maxLength, enum, schema)
+	case reflect.Ptr:
+		WithPropsFromStructTags(tags, fieldType.Elem(), schema)
+	}
+}
+
 // RegisterModel allows a model to be registered manually so that additional configuration can be applied.
 // The schema returned can be modified as required.
 func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, schema *openapi3.Schema, err error) {
@@ -269,25 +383,19 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 	t := model.Type
 	name = api.getModelName(t)
 
-	// If we've already got the schema, return it.
-	var ok bool
-	if schema, ok = api.models[name]; ok {
-		// We still want to apply the opts, when we know the schema
-		// The downside here is that if a struct has been referenced as a Value _and_ as a Pointer , there weill only
-		// exist one schema definition with object being nullable due to the Pointer variant. This is not really correct behaviour.
-		// A solution here might be to defined two variations of a single schema/struct, once as a nullable object and once as non nullable.
-		for _, opt := range opts {
-			opt(schema)
+	if !slices.Contains(reflectPrimitives, name) {
+		if schema, ok := api.models[name]; ok {
+			return name, schema, nil
 		}
-
-		return name, schema, nil
 	}
 
 	// It's known, but not in the schemaset yet.
 	if knownSchema, ok := api.KnownTypes[t]; ok {
 		// Objects, enums, need to be references, so add it into the
-		// list.
-		if shouldBeReferenced(&knownSchema) {
+		// list. This does only apply if the enum is defined in go code.
+		// If in go context the field is a primitive type and we only know enums from struct tags
+		// we handle this case differently (at least for now)
+		if !slices.Contains(reflectPrimitives, name) && shouldBeReferenced(&knownSchema) {
 			api.models[name] = &knownSchema
 		}
 		return name, &knownSchema, nil
@@ -372,9 +480,12 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 			// If the model doesn't exist.
 			_, alreadyExists := api.models[api.getModelName(fieldType)]
 			fieldSchemaName, fieldSchema, err := api.RegisterModel(modelFromType(fieldType))
+			WithPropsFromStructTags(f.Tag, fieldType, fieldSchema)
+
 			if err != nil {
 				return name, schema, fmt.Errorf("error getting schema for type %q, field %q, failed to get schema for embedded type %q: %w", t, fieldName, fieldType, err)
 			}
+
 			if f.Anonymous {
 				// It's an anonymous type, no need for a reference to it,
 				// since we're copying the fields.
@@ -421,7 +532,7 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 	}
 
 	// After all processing, register the type if required.
-	if shouldBeReferenced(schema) {
+	if !slices.Contains(reflectPrimitives, name) && shouldBeReferenced(schema) {
 		api.models[name] = schema
 		return
 	}
