@@ -477,9 +477,14 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 				fieldName = f.Name
 			}
 
+			tempOpts := []ModelOpts{}
+			if len(jsonTags) > 1 && jsonTags[1] == "omitempty" {
+				tempOpts = append(tempOpts, WithNullable())
+			}
+
 			// If the model doesn't exist.
 			_, alreadyExists := api.models[api.getModelName(fieldType)]
-			fieldSchemaName, fieldSchema, err := api.RegisterModel(modelFromType(fieldType))
+			fieldSchemaName, fieldSchema, err := api.RegisterModel(modelFromType(fieldType), tempOpts...)
 			WithPropsFromStructTags(f.Tag, fieldType, fieldSchema)
 
 			if err != nil {

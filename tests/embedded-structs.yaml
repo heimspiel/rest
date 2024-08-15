@@ -16,6 +16,7 @@ components:
         B:
           type: string
         OptionalB:
+          nullable: true
           type: string
         PointerB:
           nullable: true
