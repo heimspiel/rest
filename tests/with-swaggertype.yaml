@@ -3,8 +3,10 @@ components:
     WithWithSwaggerType:
       properties:
         foo:
+          nullable: true
           type: string
         bar:
+          nullable: true
           type: string
       type: object
 info:

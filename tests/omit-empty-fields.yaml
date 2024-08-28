@@ -6,6 +6,7 @@ components:
         A:
           type: string
         B:
+          nullable: true
           type: string
         C:
           nullable: true

@@ -7,6 +7,7 @@ components:
         model:
           $ref: "#/components/schemas/RecursiveModel"
         bar:
+          nullable: true
           type: string
     RecursiveModel:
       type: object
@@ -14,6 +15,7 @@ components:
         recursive:
           $ref: "#/components/schemas/RecursiveModelModel"
         foo:
+          nullable: true
           type: string
 paths:
   /recursive-models:
