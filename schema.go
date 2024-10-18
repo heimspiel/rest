@@ -360,6 +360,7 @@ func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, sch
 	minLength := tags.Get("minLength")
 	maxLength := tags.Get("maxLength")
 	enum := tags.Get("enums")
+	set := tags.Get("set")
 
 	switch fieldType.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint,
@@ -371,9 +372,14 @@ func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, sch
 		WithMinMaxEnum(64, minimum, maximum, enum, schema)
 	case reflect.String:
 		WithMinLMaxLEnum(minLength, maxLength, enum, schema)
+		if set != "" {
+			ptrn := "((" + strings.Join(strings.Split(set, ","), "|") + ")(,|,\\s|$))"
+			schema.WithPattern(ptrn)
+		}
 	case reflect.Ptr:
 		WithPropsFromStructTags(tags, fieldType.Elem(), schema)
 	}
+
 }
 
 // RegisterModel allows a model to be registered manually so that additional configuration can be applied.

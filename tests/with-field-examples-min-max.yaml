@@ -1,7 +1,7 @@
 openapi: 3.0.0
 components:
   schemas:
-    WithExamplesMinMaxEnum:
+    WithExamplesMinMaxEnumSet:
       type: object
       properties:
         foo:
@@ -30,6 +30,9 @@ components:
           type: number
           minimum: 0
           maximum: 99999.9999999
+        set:
+          type: string
+          pattern: "((foo|bar)(,|,\\s|$))"
       required:
       - foo
       - bar
@@ -37,6 +40,7 @@ components:
       - qux
       - thud
       - waldo
+      - set
 info:
   title: with-field-examples-min-max.yaml
   version: 0.0.0
@@ -48,7 +52,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WithExamplesMinMaxEnum'
+                $ref: '#/components/schemas/WithExamplesMinMaxEnumSet'
           description: ""
         default:
           description: ""

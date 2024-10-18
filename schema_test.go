@@ -198,7 +198,7 @@ type WithWithSwaggerType struct {
 	Bar string `json:"bar,omitempty"`
 }
 
-type WithExamplesMinMaxEnum struct {
+type WithExamplesMinMaxEnumSet struct {
 	Foo   string  `json:"foo" minLength:"2" maxLength:"5"`
 	Bar   int     `json:"bar" minimum:"0" maximum:"255"`
 	Baz   string  `json:"baz" enums:"foo,bar,baz"`
@@ -206,6 +206,7 @@ type WithExamplesMinMaxEnum struct {
 	Fred  *string `json:"fred" enums:"foo,bar,baz"`
 	Thud  float64 `json:"thud" minimum:"0" maximum:"9.9999"`
 	Waldo float64 `json:"waldo" minimum:"0" maximum:"99999.9999999"`
+	Set   string  `json:"set" set:"foo,bar"`
 }
 
 func TestSchema(t *testing.T) {
@@ -461,9 +462,9 @@ func TestSchema(t *testing.T) {
 		{
 			name: "with-field-examples-min-max.yaml",
 			setup: func(api *API) (err error) {
-				api.RegisterModel(ModelOf[WithExamplesMinMaxEnum]())
+				api.RegisterModel(ModelOf[WithExamplesMinMaxEnumSet]())
 				api.Get("/with-field-examples-min-max").
-					HasResponseModel(http.StatusOK, ModelOf[WithExamplesMinMaxEnum]())
+					HasResponseModel(http.StatusOK, ModelOf[WithExamplesMinMaxEnumSet]())
 				return
 			},
 		},
