@@ -373,7 +373,7 @@ func WithPropsFromStructTags(tags reflect.StructTag, fieldType reflect.Type, sch
 	case reflect.String:
 		WithMinLMaxLEnum(minLength, maxLength, enum, schema)
 		if set != "" {
-			ptrn := "((" + strings.Join(strings.Split(set, ","), "|") + ")(,|,\\s|$))"
+			ptrn := "^(" + strings.Join(strings.Split(set, ","), "|") + ")(, {0,1}(" + strings.Join(strings.Split(set, ","), "|") + "))*$"
 			schema.WithPattern(ptrn)
 		}
 	case reflect.Ptr:
