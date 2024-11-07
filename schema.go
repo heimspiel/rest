@@ -483,8 +483,10 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 				fieldName = f.Name
 			}
 
+			validationTags := strings.Split(f.Tag.Get("validate"), ",")
+
 			tempOpts := []ModelOpts{}
-			if len(jsonTags) > 1 && jsonTags[1] == "omitempty" {
+			if slices.Contains(validationTags, "nullable") {
 				tempOpts = append(tempOpts, WithNullable())
 			}
 
@@ -518,7 +520,7 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 			}
 			schema.Properties[fieldName] = ref
 			isPtr := fieldType.Kind() == reflect.Pointer
-			hasOmitEmptySet := slices.Contains(jsonTags, "omitempty")
+			hasOmitEmptySet := !slices.Contains(validationTags, "required")
 			if isFieldRequired(isPtr, hasOmitEmptySet) {
 				schema.Required = append(schema.Required, fieldName)
 			}
