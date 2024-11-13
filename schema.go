@@ -486,7 +486,7 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 			validationTags := strings.Split(f.Tag.Get("validate"), ",")
 
 			tempOpts := []ModelOpts{}
-			if slices.Contains(validationTags, "nullable") {
+			if slices.Contains(validationTags, "omitempty") {
 				tempOpts = append(tempOpts, WithNullable())
 			}
 
@@ -520,8 +520,11 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 			}
 			schema.Properties[fieldName] = ref
 			isPtr := fieldType.Kind() == reflect.Pointer
-			hasOmitEmptySet := !slices.Contains(validationTags, "required")
-			if isFieldRequired(isPtr, hasOmitEmptySet) {
+
+			// This removes the need for the omitempty tag, to make the field non required.
+			// Required fields should be provided through a CustomSchemaApplier (https://pkg.go.dev/github.com/a-h/rest#CustomSchemaApplier)
+			//hasOmitEmptySet := slices.Contains(jsonTags, "omitempty")
+			if isFieldRequired(isPtr, true) {
 				schema.Required = append(schema.Required, fieldName)
 			}
 		}
