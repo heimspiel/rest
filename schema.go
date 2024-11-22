@@ -518,8 +518,6 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 			}
 			schema.Properties[fieldName] = ref
 
-			// This removes the need for the omitempty tag, to make the field non required.
-			// Required fields should be provided through a CustomSchemaApplier (https://pkg.go.dev/github.com/a-h/rest#CustomSchemaApplier)
 			//isPtr := fieldType.Kind() == reflect.Pointer
 			//hasOmitEmptySet := slices.Contains(jsonTags, "omitempty")
 			//if isFieldRequired(isPtr, true) {

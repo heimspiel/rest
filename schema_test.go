@@ -24,10 +24,22 @@ type TestRequestType struct {
 	IntField int
 }
 
+func (m TestRequestType) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"IntField",
+	}
+}
+
 // TestResponseType description.
 type TestResponseType struct {
 	// IntField description.
 	IntField int
+}
+
+func (m TestResponseType) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"IntField",
+	}
 }
 
 type AllBasicDataTypes struct {
@@ -48,6 +60,28 @@ type AllBasicDataTypes struct {
 	Rune    rune
 	String  string
 	Bool    bool
+}
+
+func (m AllBasicDataTypes) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"Int",
+		"Int8",
+		"Int16",
+		"Int32",
+		"Int64",
+		"Uint",
+		"Uint8",
+		"Uint16",
+		"Uint32",
+		"Uint64",
+		"Uintptr",
+		"Float32",
+		"Float64",
+		"Byte",
+		"Rune",
+		"String",
+		"Bool",
+	}
 }
 
 type AllBasicDataTypesPointers struct {
@@ -72,25 +106,52 @@ type AllBasicDataTypesPointers struct {
 
 type OmitEmptyFields struct {
 	A string
-	B string `json:",omitempty"`
+	B string `validate:",omitempty"`
 	C *string
-	D *string `json:",omitempty"`
+	D *string `validate:",omitempty"`
+}
+
+func (m OmitEmptyFields) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"A",
+	}
 }
 
 type EmbeddedStructA struct {
 	A string
 }
+
+func (m EmbeddedStructA) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"A",
+	}
+}
+
 type EmbeddedStructB struct {
 	B                string
-	OptionalB        string `json:",omitempty"`
+	OptionalB        string `validate:",omitempty"`
 	PointerB         *string
-	OptionalPointerB *string `json:",omitempty"`
+	OptionalPointerB *string `validate:",omitempty"`
+}
+
+func (m EmbeddedStructB) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"B",
+	}
 }
 
 type WithEmbeddedStructs struct {
 	EmbeddedStructA
 	EmbeddedStructB
 	C string
+}
+
+func (m WithEmbeddedStructs) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"A",
+		"B",
+		"C",
+	}
 }
 
 type WithNameStructTags struct {
@@ -106,9 +167,24 @@ type WithNameStructTags struct {
 	MiddleName string
 }
 
+func (m WithNameStructTags) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"firstName",
+		"LastName",
+		"FullName",
+		"MiddleName",
+	}
+}
+
 type KnownTypes struct {
 	Time    time.Time  `json:"time"`
 	TimePtr *time.Time `json:"timePtr"`
+}
+
+func (m KnownTypes) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"time",
+	}
 }
 
 type User struct {
@@ -116,8 +192,21 @@ type User struct {
 	Name string `json:"name"`
 }
 
+func (m User) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"id",
+		"name",
+	}
+}
+
 type OK struct {
 	OK bool `json:"ok"`
+}
+
+func (m OK) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"ok",
+	}
 }
 
 type StringEnum string
@@ -143,10 +232,25 @@ type WithEnums struct {
 	V  string       `json:"v"`
 }
 
+func (m WithEnums) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"s",
+		"ss",
+		"i",
+		"v",
+	}
+}
+
 type Pence int64
 
 type WithMaps struct {
 	Amounts map[string]Pence `json:"amounts"`
+}
+
+func (m WithMaps) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"amounts",
+	}
 }
 
 type MultipleDateFieldsWithComments struct {
@@ -154,6 +258,13 @@ type MultipleDateFieldsWithComments struct {
 	DateField time.Time `json:"dateField"`
 	// DateFieldA is another field containing a date
 	DateFieldA time.Time `json:"dateFieldA"`
+}
+
+func (m MultipleDateFieldsWithComments) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"dateField",
+		"dateFieldA",
+	}
 }
 
 type StructWithCustomisation struct {
@@ -166,6 +277,10 @@ func (*StructWithCustomisation) ApplyCustomSchema(s *openapi3.Schema) {
 	s.Properties["a"].Value.Description = "A string"
 	s.Properties["a"].Value.Example = "test"
 	s.Properties["b"].Value.Description = "A custom field"
+	s.Required = []string{
+		"a",
+		"b",
+	}
 }
 
 type FieldWithCustomisation string
@@ -179,23 +294,29 @@ type StructWithTags struct {
 	A string `json:"a" rest:"A is a string."`
 }
 
+func (m StructWithTags) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"a",
+	}
+}
+
 type RecursiveModelModel struct {
-	Model *RecursiveModel `json:"model,omitempty"`
-	Bar   string          `json:"bar,omitempty"`
+	Model *RecursiveModel `json:"model" validate:"omitempty"`
+	Bar   string          `json:"bar" validate:"omitempty"`
 }
 
 type RecursiveModel struct {
-	Recursive *RecursiveModelModel `json:"recursive,omitempty"`
-	Foo       string               `json:"foo,omitempty"`
+	Recursive *RecursiveModelModel `json:"recursive" validate:"omitempty"`
+	Foo       string               `json:"foo" validate:"omitempty"`
 }
 
 type WithSwaggerType struct {
-	Foo []uint8 `json:"foo,omitempty" swaggertype:"string"`
+	Foo []uint8 `json:"foo" swaggertype:"string" validate:"omitempty"`
 }
 
 type WithWithSwaggerType struct {
 	*WithSwaggerType
-	Bar string `json:"bar,omitempty"`
+	Bar string `json:"bar" validate:"omitempty"`
 }
 
 type WithExamplesMinMaxEnumSet struct {
@@ -207,6 +328,18 @@ type WithExamplesMinMaxEnumSet struct {
 	Thud  float64 `json:"thud" minimum:"0" maximum:"9.9999"`
 	Waldo float64 `json:"waldo" minimum:"0" maximum:"99999.9999999"`
 	Set   string  `json:"set" set:"foo,bar"`
+}
+
+func (m WithExamplesMinMaxEnumSet) ApplyCustomSchema(s *openapi3.Schema) {
+	s.Required = []string{
+		"foo",
+		"bar",
+		"baz",
+		"qux",
+		"thud",
+		"waldo",
+		"set",
+	}
 }
 
 func TestSchema(t *testing.T) {
