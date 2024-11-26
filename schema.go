@@ -484,7 +484,7 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 			}
 
 			tempOpts := []ModelOpts{}
-			if len(jsonTags) > 1 && jsonTags[1] == "omitempty" {
+			if slices.Contains(strings.Split(f.Tag.Get("validate"), ","), "omitempty") {
 				tempOpts = append(tempOpts, WithNullable())
 			}
 
@@ -517,11 +517,12 @@ func (api *API) RegisterModel(model Model, opts ...ModelOpts) (name string, sche
 				}
 			}
 			schema.Properties[fieldName] = ref
-			isPtr := fieldType.Kind() == reflect.Pointer
-			hasOmitEmptySet := slices.Contains(jsonTags, "omitempty")
-			if isFieldRequired(isPtr, hasOmitEmptySet) {
-				schema.Required = append(schema.Required, fieldName)
-			}
+
+			//isPtr := fieldType.Kind() == reflect.Pointer
+			//hasOmitEmptySet := slices.Contains(jsonTags, "omitempty")
+			//if isFieldRequired(isPtr, true) {
+			//	schema.Required = append(schema.Required, fieldName)
+			//}
 		}
 	}
 
